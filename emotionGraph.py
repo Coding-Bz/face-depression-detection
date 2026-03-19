@@ -55,11 +55,7 @@ class EmotionGraph ():
 
     def update(self, emotion, score):
 
-        print(emotion, score)
-
         y_val = self.emotion_to_y(emotion, score)
-
-        print(y_val, self.t)
 
         if y_val is None:
             return
