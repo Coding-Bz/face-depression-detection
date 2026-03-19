@@ -44,11 +44,11 @@ def update_frame():
             score = results[0]['score']
             emotion_window.append(label)
 
-            color = (200, 200, 200)  # Grey neutral
+            color = (255, 255, 0)  # neutral
             if label == 'happy':
                 color = (0, 255, 0)  # Green
             elif label == 'sad':
-                color = (180, 130, 70)  # Steel Blue
+                color = (255, 10, 0)  # Steel Blue
             elif label == 'angry':
                 color = (0, 0, 255)  # Red
             elif label == 'fear':
@@ -56,7 +56,7 @@ def update_frame():
             elif label == 'surprise':
                 color = (0, 255, 255)  # Yellow
             elif label == 'disgust':
-                color = (47, 107, 85)  # Olive
+                color = (47, 150, 85)  # Olive
 
 
             cv.putText(frame, f"{label}: {score:.2f}", (x, y - 10),
