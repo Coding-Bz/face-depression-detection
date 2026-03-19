@@ -1,8 +1,10 @@
-import cv2 as cv 
+import cv2 as cv
+import tkinter as tk
 from PIL import Image
 
 from collections import deque
 from transformers import pipeline
+from emotionGraph import EmotionGraph
 
 print("Hello Elif")
 
@@ -17,7 +19,7 @@ NEGATIVE_EMOTIONS  = {"sad","fear","angry"}
 
 # making the buffer for the capturing the frame 
 
-window_size=  30 ; 
+window_size=  30 ;
 
 emotion_window  = deque(maxlen=window_size)
 
@@ -25,13 +27,16 @@ emotion_window  = deque(maxlen=window_size)
 
 cap =  cv.VideoCapture(0)
 
+# making emotion graph
+root = tk.Tk()
+graph = EmotionGraph(root)
 
 # now continous using the webcam and taking the webcam frames !!!!
-while(1):
+def update_frame():
     ret , frame  = cap.read()
     if not ret:
         print("Error in taking the frames from the webcam !!!! ")
-        break ; 
+        root.after(10, update_frame)
 
 
     # when i capture the video using the open cv it turn it 
@@ -43,7 +48,7 @@ while(1):
     rgb_frame = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
 
 
-# Convert NumPy → PIL Image
+    # Convert NumPy → PIL Image
     pil_image = Image.fromarray(rgb_frame)
 
 
@@ -70,6 +75,9 @@ while(1):
         cv.putText(frame, f"{labels} ({score:.2f})", (20, 40),
                     cv.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 4)
 
+        # Update graph
+        graph.update(labels, score)
+
         # If consistently negative → show alert
         if negative_ratio > 0.6 and len(emotion_window) == window_size:
             cv.putText(frame, "⚠ ALERT: Possible Distress!", (20, 80),
@@ -81,7 +89,12 @@ while(1):
 
     # Quit on 'q'
     if cv.waitKey(1) & 0xFF == ord('q'):
-        break
+        cap.release()
+        cv.destroyAllWindows()
+        root.destroy()
 
-cap.release()
-cv.destroyAllWindows()
+    root.after(10, update_frame)
+
+root.after(0, update_frame)
+root.mainloop()
+
