@@ -63,7 +63,7 @@ def update_frame():
                        cv.FONT_HERSHEY_SIMPLEX, 0.8, color, 2)
 
             # Update graph
-            graph.update(labels, score)
+            graph.update(label, score)
 
     if len(emotion_window) == window_size:
         neg_ratio = sum(1 for e in emotion_window if e in NEGATIVE_EMOTIONS) / window_size
