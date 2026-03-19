@@ -5,83 +5,76 @@ from collections import deque
 from transformers import pipeline
 from emotionGraph import EmotionGraph
 
-print("Hello Elif! Starting the emotion detector...")
+print("Hello Elif! Starting the optimized emotion detector...")
 
-# Loading the model
+# 1. Load everything ONCE (outside the loop)
 emotion_pipeline = pipeline("image-classification", model="dima806/facial_emotions_image_detection")
+face_cascade = cv.CascadeClassifier(cv.data.haarcascades + 'haarcascade_frontalface_default.xml')
 
-# Negative emotions to track
 NEGATIVE_EMOTIONS = {"sad", "fear", "angry", "disgust"}
-
-# Buffer for smoothing results
-window_size = 30
+window_size = 20  # Smaller window responds faster
 emotion_window = deque(maxlen=window_size)
 
-# Start webcam
 cap = cv.VideoCapture(0)
 
-if not cap.isOpened():
-    print("Error: Could not open webcam.")
-    exit()
-
-# making emotion graph
 root = tk.Tk()
 graph = EmotionGraph(root)
 
-# now continous using the webcam and taking the webcam frames !!!!
 def update_frame():
-    ret , frame  = cap.read()
-    if not ret:
-        print("Error in taking the frames from the webcam !!!! ")
-        root.after(10, update_frame)
+    ret, frame = cap.read()
+    if not ret: root.after(10, update_frame)
 
-    rgb_frame = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
-    pil_image = Image.fromarray(rgb_frame)
+    gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
+    faces = face_cascade.detectMultiScale(gray, 1.3, 5)
 
-    results = emotion_pipeline(pil_image)
-
-    if results:
-        top_prediction = results[0]
-        label = top_prediction['label']
-        score = top_prediction['score']
-
-        emotion_window.append(label)
-
-        if label == 'happy':
-            color = (0, 255, 0)  # Green
-        elif label == 'sad':
-            color = (180, 130, 70)  # Steel Blue
-        elif label == 'angry':
-            color = (0, 0, 255)  # Red
-        elif label == 'fear':
-            color = (128, 0, 128)  # Purple
-        elif label == 'neutral':
-            color = (200, 200, 200)  # Grey
-        elif label == 'disgust':
-            color = (47, 107, 85)  # Olive
-        else:
-            color = (255, 255, 255)  # White
+    for (x, y, w, h) in faces:
+        cv.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
 
 
-        cv.putText(frame, f"{label} ({score:.2f})", (30, 70),
-                   cv.FONT_HERSHEY_SIMPLEX, 1.5, color, 3)
+        face_bgr = frame[y:y + h, x:x + w]
+
+        face_rgb = cv.cvtColor(face_bgr, cv.COLOR_BGR2RGB)
+        pil_face = Image.fromarray(face_rgb)
+
+        results = emotion_pipeline(pil_face)
+
+        if results:
+            label = results[0]['label']
+            score = results[0]['score']
+            emotion_window.append(label)
+
+            color = (255, 255, 255)  # Default white
+            if label == 'happy':
+                color = (0, 255, 0)  # Green
+            elif label == 'sad':
+                color = (180, 130, 70)  # Steel Blue
+            elif label == 'angry':
+                color = (0, 0, 255)  # Red
+            elif label == 'fear':
+                color = (128, 0, 128)  # Purple
+            elif label == 'neutral':
+                color = (200, 200, 200)  # Grey
+            elif label == 'disgust':
+                color = (47, 107, 85)  # Olive
+            else:
+                color = (255, 255, 255)  # White
+
+            cv.putText(frame, f"{label}: {score:.2f}", (x, y - 10),
+                       cv.FONT_HERSHEY_SIMPLEX, 0.8, color, 2)
+
+            # Update graph
+            graph.update(labels, score)
+
+    if len(emotion_window) == window_size:
+        neg_ratio = sum(1 for e in emotion_window if e in NEGATIVE_EMOTIONS) / window_size
+        if neg_ratio > 0.6:
+            cv.putText(frame, "!!! DISTRESS ALERT !!!", (50, 50),
+                       cv.FONT_HERSHEY_SIMPLEX, 1.2, (0, 0, 255), 4)
 
 
-        negative_count = sum(1 for e in emotion_window if e in NEGATIVE_EMOTIONS)
-        negative_ratio = negative_count / len(emotion_window)
 
+    cv.imshow("Real-time Emotion Detection", frame)
 
-        # Update graph
-        graph.update(labels, score)
-
-        if len(emotion_window) == window_size and negative_ratio > 0.6:
-            cv.putText(frame, "!!! ALERT: Possible Distress !!!", (10, 220),
-                       cv.FONT_HERSHEY_SIMPLEX, 1.3, (0, 0, 255), 5)
-
-
-    cv.imshow("Emotion Detection", frame)
-
-    # Quit on 'q'
     if cv.waitKey(1) & 0xFF == ord('q'):
         cap.release()
         cv.destroyAllWindows()
