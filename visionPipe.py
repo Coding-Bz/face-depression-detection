@@ -1,3 +1,4 @@
+import sys
 import cv2 as cv
 import tkinter as tk
 from PIL import Image
@@ -43,7 +44,7 @@ def update_frame():
             score = results[0]['score']
             emotion_window.append(label)
 
-            color = (255, 255, 255)  # Default white
+            color = (200, 200, 200)  # Grey neutral
             if label == 'happy':
                 color = (0, 255, 0)  # Green
             elif label == 'sad':
@@ -52,18 +53,17 @@ def update_frame():
                 color = (0, 0, 255)  # Red
             elif label == 'fear':
                 color = (128, 0, 128)  # Purple
-            elif label == 'neutral':
-                color = (200, 200, 200)  # Grey
+            elif label == 'surprise':
+                color = (0, 255, 255)  # Yellow
             elif label == 'disgust':
                 color = (47, 107, 85)  # Olive
-            else:
-                color = (255, 255, 255)  # White
+
 
             cv.putText(frame, f"{label}: {score:.2f}", (x, y - 10),
                        cv.FONT_HERSHEY_SIMPLEX, 0.8, color, 2)
 
             # Update graph
-            graph.update(label, score)
+            graph.update(label, score, color)
 
     if len(emotion_window) == window_size:
         neg_ratio = sum(1 for e in emotion_window if e in NEGATIVE_EMOTIONS) / window_size
@@ -79,6 +79,7 @@ def update_frame():
         cap.release()
         cv.destroyAllWindows()
         root.destroy()
+        sys.exit()
 
     root.after(10, update_frame)
 

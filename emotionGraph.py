@@ -3,18 +3,18 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 
-class EmotionGraph ():
+class EmotionGraph:
     def __init__(self, master):
         # Emotion ranges (each band)
         self.master = master
         self.emotion_ranges = {
-            "angry": (0),
-            "sad": (100),
-            "fear": (200),
-            "disgust": (300),
-            "neutral": (400),
-            "happy": (500),
-            "surprised": (600)
+            "angry": 0,
+            "sad": 100,
+            "fear": 200,
+            "disgust": 300,
+            "neutral": 400,
+            "happy": 500,
+            "surprise": 600
         }
 
         self.x_data = []
@@ -53,7 +53,8 @@ class EmotionGraph ():
             return None
         return self.emotion_ranges[emotion] + (score * 100)
 
-    def update(self, emotion, score):
+    def update(self, emotion, score, color):
+        normalized_color = (color[2]/255, color[1]/255, color[0]/255)
 
         y_val = self.emotion_to_y(emotion, score)
 
@@ -64,12 +65,8 @@ class EmotionGraph ():
         self.y_data.append(y_val)
         self.t += 1
 
-        self.ax.plot(self.x_data, self.y_data)
 
-        # Keep last 30 points (scrolling effect)
-        if len(self.x_data) > 30:
-            self.x_data = self.x_data[-30:]
-            self.y_data = self.y_data[-30:]
+        self.ax.plot(self.x_data, self.y_data, color=normalized_color)
 
         self.canvas.draw()
         self.canvas.flush_events()
