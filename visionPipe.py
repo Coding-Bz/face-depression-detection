@@ -4,7 +4,7 @@ from PIL import Image
 from collections import deque
 from transformers import pipeline
 
-print("Hello aman deep")
+print("Hello Elif")
 
 
 # loading the hugging face model for our test !!!
@@ -68,12 +68,12 @@ while(1):
 
         # Display current prediction
         cv.putText(frame, f"{labels} ({score:.2f})", (20, 40),
-                    cv.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+                    cv.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 4)
 
         # If consistently negative → show alert
         if negative_ratio > 0.6 and len(emotion_window) == window_size:
             cv.putText(frame, "⚠ ALERT: Possible Distress!", (20, 80),
-                        cv.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 3)
+                        cv.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 4)
 
 
     # Display the frame
